@@ -1,7 +1,6 @@
 import numpy as np
 
 from . import make_mds_embedding
-from .coloring import bestpair
 
 
 def ordered_options(cgpt, ordering_method='mds', embedding_distance_metric='euclidean'):
