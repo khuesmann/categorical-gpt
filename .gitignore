@@ -1,0 +1,10 @@
+src/categorical_gpt/__pychache__
+src/api.py
+src/test.py
+.ruff_cache
+.idea
+src/.idea
+src/.DS_Store
+src/__pycache__
+.DS_Store
+__pycache__
