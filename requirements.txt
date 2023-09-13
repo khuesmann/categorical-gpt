@@ -7,3 +7,5 @@ networkx
 umap-learn
 loguru
 requests
+llm
+llm-gpt4all

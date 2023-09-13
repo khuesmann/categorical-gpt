@@ -1,6 +1,5 @@
 export default {
   API_URL: 'http://localhost:5001/api',
-  AVAILABLE_MODELS: ['gpt-3.5-turbo', 'gpt-4'],
   EXAMPLES: [
     {
       name: 'Example 1',

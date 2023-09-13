@@ -1,9 +1,9 @@
 import os
 
+import llm
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from .cgpt import CategoricalGPT
-from .openai_driver import OpenAIDriver
 from .ordering import ordered_options
 from .coloring import color_coding
 from .embedding import make_mds_embedding
@@ -11,10 +11,7 @@ from .embedding import make_mds_embedding
 api = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'gui', '.output', 'public'))
 CORS(api)
 
-driver_mappings = {
-    'gpt-3.5-turbo': OpenAIDriver(api_key=os.environ.get('OPENAI_API_KEY'), cache_path=os.environ.get('CACHE_PATH')),
-    'gpt-4': OpenAIDriver(api_key=os.environ.get('OPENAI_API_KEY'), cache_path=os.environ.get('CACHE_PATH'))
-}
+llm_driver = None
 
 
 def error(message):
@@ -29,12 +26,11 @@ def error(message):
 def make_cgpt():
     category_name = request.json.get('category_name', '')
     category_options = request.json.get('category_options', '')
+    model_information = request.json.get('category_options', '')
 
     if category_name == '' or category_options == '':
         return error('Specify a category name and options.')
 
-    model = request.json.get('model', '')
-    llm_driver = driver_mappings[model]
     if llm_driver is None:
         return error('Model not mapped to a driver')
 
@@ -45,15 +41,18 @@ def make_cgpt():
 
 @api.route('/api/load-characteristics', methods=['POST'])
 def load_characteristics():
-    model_params = request.json.get('model_params', {})
+    global llm_driver
+    prevent_cache = request.json.get('prevent_cache', False)
+    model_params = llm_driver.model_params.get('characteristics', {})
     cgpt = make_cgpt()
-    cgpt.get_characteristics(capitalized=True, **model_params)
+    cgpt.get_characteristics(capitalized=True, prevent_cache=prevent_cache, **model_params)
     return jsonify(cgpt.structure())
 
 
 @api.route('/api/load-heuristic', methods=['POST'])
 def load_heuristic():
-    model_params = request.json.get('model_params')
+    global llm_driver
+    model_params = llm_driver.model_params.get('heuristics', {})
     characteristic = request.json.get('characteristic', None)
     if characteristic is None:
         return error('Characteristic needs to be specified.')
@@ -64,7 +63,8 @@ def load_heuristic():
 
 @api.route('/api/load-values', methods=['POST'])
 def load_values():
-    model_params = request.json.get('model_params')
+    global llm_driver
+    model_params = llm_driver.model_params.get('apply_heuristic', {})
     characteristic = request.json.get('characteristic', None)
     heuristic = request.json.get('heuristic', None)
     if characteristic is None or heuristic is None:
@@ -113,3 +113,9 @@ def serve(path):
         return send_from_directory(api.static_folder, path)
     else:
         return send_from_directory(api.static_folder, 'index.html')
+
+
+def start_gui(llm, **kwargs):
+    global llm_driver
+    llm_driver = llm
+    api.run(**kwargs)

@@ -7,12 +7,12 @@ DEFAULT_CHARACTERISTIC_PROMPT = "Given a dataset {dataset_name} with a categoric
                                 "which has the following possible values: {options}. " \
                                 "Identify features and characteristics for the category '{category_name}' to compare the given options. " \
                                 "Ensure these characteristics can be represented as a continuous numerical value on a scale from 0 to 100. " \
-                                "Be concise. Respond with a valid JSON array that follows the structure ['characteristic1', 'characteristic2', ...]"
+                                'Be concise. Respond with a valid JSON array that follows the structure ["characteristic1", "characteristic2", ...]'
 
 DEFAULT_HEURISTIC_PROMPT = "Given a dataset {dataset_name} with a categorical attribute '{category_name}'. " \
                            "A given category option can be described using the characteristics '{characteristic}'. " \
                            "Provide a guiding principle for assigning a numerical value, ranging between 0 and 100, to the specified options. " \
-                           "Start your response with 'To assign a numerical value ranging from 0 to 100 for the characteristic {characteristic}, ...' " \
+                           "Start your response with 'To assign a numerical value ranging from 0 to 100 for the characteristic '{characteristic}', ...' " \
                            "Be concise. Respond with an explanation for the heuristic only, no additional explanations. "
 
 DEFAULT_APPLY_HEURISTIC_PROMPT = "Given a dataset {dataset_name} with a categorical attribute '{category_name}' " \
@@ -21,7 +21,7 @@ DEFAULT_APPLY_HEURISTIC_PROMPT = "Given a dataset {dataset_name} with a categori
                                  "Allocate a numeric value to each of the options using the heuristic: \n {heuristic} \n " \
                                  "Be concise. Make sure that the values are on a scale from 0 to 100. " \
                                  "Respond with a JSON array only, that follows this structure: \n" \
-                                 '{{ "option_1": numerical_value_for_characteristic , ... list all options-number pairs }}'
+                                 '{{ "option_1": numerical_value_for_characteristic_1 , "option_2": numerical_value_for_characteristic_2 ... list all options-number pairs }}'
 
 
 class CategoricalGPT:
@@ -99,10 +99,17 @@ class CategoricalGPT:
             if option_assignments is None:
                 option_assignments = {}
 
-            for option in self.options:
-                if option not in option_assignments:
+            try:
+                for option in self.options:
+                    if option not in option_assignments:
+                        print(option_assignments)
+                        option_assignments[option] = -1
+                        logging.warning(f"Option '{option}' failed to assign value (characteristic={characteristic}).")
+            except Exception as e:
+                logging.warning(f"Failed to assign values to characteristic {characteristic}.")
+                option_assignments = {}
+                for option in self.options:
                     option_assignments[option] = -1
-                    logging.warning(f"Option '{option}' failed to assign value (characteristic={characteristic}).")
 
             final_assignments.append(option_assignments)
 

@@ -1,11 +1,7 @@
 # CategoricalGPT
 
-This package is an implementation of the paper "Large Language Models for Categorical Data Transformation".
-
-Due to the lack of an inherent mathematical structure, categorical data are limited or difficult to analyze with conventional techniques. To address this challenge, this paper introduces a novel technique for transforming categorical data into interpretable numerical feature vectors using Large Language Models.
-
-Our approach identifies common characteristics across category options and assigns numerical values to them, creating a multi-dimensional representation that can be readily processed using traditional methods.
-
+When analyzing heterogeneous data comprising numerical and categorical attributes, it is common to treat the different data types separately or transform the categorical attributes to numerical ones. The transformation has the advantage of facilitating an integrated multi-variate analysis of all attributes. We propose a novel technique for transforming categorical data into interpretable numerical feature vectors using Large Language Models (LLMs). The LLMs are used to identify the categorical attributes' main characteristics and assign numerical values to these characteristics, thus generating a multi-dimensional feature vector. The transformation can be computed fully automatically, but due to the interpretability of the characteristics, it can also be adjusted intuitively by an end user. We provide a respective interactive tool that aims to validate and possibly improve the AI-generated outputs.
+Having transformed a categorical attribute, we propose novel methods for ordering and color-coding the categories based on the similarities of the feature vectors.
 # Installation
 
 Install via PIP
@@ -22,20 +18,51 @@ pip install -e .
 
 # Getting Started
 
-## Quick start
-
 This guide gives you an introduction on how to use CategoricalGPT to perform an automatic (unsupervised) data transformation.
 
+## Define a LLM Driver
+This package utilizes the [llm](https://pypi.org/project/llm/) module to interact with different LLMs.
+You can define the model parameters for each step of the pipeline. Look up the [llm](https://pypi.org/project/llm/) documentation for more information on how to install new models and which parameters each model can use.
+
+Additionally, you can define a cache path. Prompts to the given LLM can be cached to avoid unnecessary API calls.
 ```python
-from categorical_gpt import OpenAIDriver
+from categorical_gpt import LLMDriver
+
+llm_driver = LLMDriver(
+    'gpt-3.5-turbo',
+    api_key='sk-123456789abc',
+    cache_path='path/to/optional/cache',
+    model_params={
+        "characteristics": {
+            "n": 1,
+            "temperature": 0.9,
+            "top_p": 1
+        },
+        "heuristic": {
+            "n": 1,
+            "temperature": 0.7,
+            "top_p": 1
+        },
+        "apply_heuristic": {
+            "n": 1,
+            "temperature": 0.01,
+            "top_p": 0.1
+        }
+    }
+)
+```
+
+## Run the transformation
+```python
 from categorical_gpt import CategoricalGPT
 
 # First define a LLM driver.
-# This package offers the OpenAI Driver, but you can define your own drivers for different LLMs
-llm_driver = OpenAIDriver(cache_path='.cache', api_key='sk-ABC123')
+llm_driver = ...
 
 # Initialize the CategoricalGPT object with the driver, category name and category options
-cgpt = CategoricalGPT(llm_driver=llm_driver, category_name='Car Brand', options=['Mercedes', 'Ferrari', 'Nissan', 'Kia', 'Ford', 'BMW', 'Bugatti'])
+category_name = 'Car Brand'
+category_options = ['Mercedes', 'Ferrari', 'Nissan', 'Kia', 'Ford', 'BMW', 'Bugatti']
+cgpt = CategoricalGPT(llm_driver=llm_driver, category_name=category_name, options=category_options)
 
 # Perform the full transfromation in one go. You can assign the model parameters for each step of the pipeline.
 feature_vectors = cgpt.transform(
@@ -62,12 +89,9 @@ feature_vectors = cgpt.transform(
 The above approach shows a single function-call to perform the transformation. You can also use it more granular as follows:
 
 ```python
-from categorical_gpt import OpenAIDriver
 from categorical_gpt import CategoricalGPT
 
-# First define a LLM driver.
-# This package offers the OpenAI Driver, but you can define your own drivers for different LLMs
-llm_driver = OpenAIDriver(cache_path='.cache', api_key='sk-ABC123')
+llm_driver = ...
 
 # Initialize the CategoricalGPT object with the driver, category name and category options
 cgpt = CategoricalGPT(llm_driver=llm_driver, category_name='Car Brand', options=['Mercedes', 'Ferrari', 'Nissan', 'Kia', 'Ford', 'BMW', 'Bugatti'])
@@ -134,22 +158,16 @@ ordered_options = ordered_options(cgpt, ordering_method='tsp+mds', embedding_dis
 
 ## Fine-tuning GUI
 
-In order to supervise the transformatin process, we offer a graphical user interface that can be run via a webserver (Flask). In order to use the build-in OpenAI Driver, you have to specify the environment variables `OPENAI_API_KEY=sk-you-key` and `CACHE_PATH=path-to-the-cache` when launching the respective python script.
+In order to supervise the transformatin process, we offer a graphical user interface that can be run via a webserver (Flask). 
+See the [Flask](https://flask.palletsprojects.com/en/2.3.x/) documentation for more information.
 
 ```python
-from categorical_gpt import api
+from categorical_gpt import start_gui
+
+llm_driver = ...
 
 # See Flask documentation for all available parameters
-api.run(debug=False, threaded=True, host="0.0.0.0", port=5001)
+start_gui(llm_driver, debug=True, threaded=True, host="0.0.0.0", port=5001)
 ```
 
 This will start up the webserver, that can be visited via http://localhost:5001/ . Full guide for the GUI can be found here.
-
-Right now, we have mapped two models, `gpt-3.5-turbo` and `gpt-4` to the OpenAI-Driver. If you want to use another model in the GUI, just do the following:
-
-```python
-from categorical_gpt import api, driver_mappings
-
-driver_mappings['ANY_OTHER_MODEL_NAME'] = ModelDriverClass(...)
-api.run(debug=False, threaded=True, host="0.0.0.0", port=5001)
-```

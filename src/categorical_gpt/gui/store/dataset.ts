@@ -59,13 +59,8 @@ export const useDatasetStore = defineStore('dataset', {
       this.categoryOptions = options;
     },
     async loadCharacteristics(preventCache = false) {
-      const settingsStore = useSettingsStore();
-      const modelParams = JSON.parse(
-        JSON.stringify(settingsStore.modelParams.characteristic),
-      );
-      modelParams.prevent_cache = preventCache;
       const structure = await post('/load-characteristics', {
-        model_params: modelParams,
+        prevent_cache: preventCache,
         ...this.defaultRequestParameters,
       });
       this.cgpt.characteristics = structure.characteristics;
@@ -82,10 +77,8 @@ export const useDatasetStore = defineStore('dataset', {
       return characteristic;
     },
     async loadHeuristic(characteristic: string) {
-      const settingsStore = useSettingsStore();
       const structure = await post('/load-heuristic', {
         characteristic: characteristic,
-        model_params: settingsStore.modelParams.heuristic,
         ...this.defaultRequestParameters,
       });
 
@@ -101,11 +94,9 @@ export const useDatasetStore = defineStore('dataset', {
           this.defaultValueAssignment;
         return this.defaultValueAssignment;
       }
-      const settingsStore = useSettingsStore();
       const structure = await post('/load-values', {
         characteristic: characteristic,
         heuristic: heuristic,
-        model_params: settingsStore.modelParams.apply_heuristic,
         ...this.defaultRequestParameters,
       });
       this.cgpt.characteristic_values[characteristic] =
