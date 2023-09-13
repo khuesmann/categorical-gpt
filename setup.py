@@ -37,5 +37,5 @@ setuptools.setup(
     },
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.6",
-    install_requires=["scikit-learn", "scikit-image", "numpy", "flask", "flask-cors", "networkx", "umap-learn", "loguru", "requests"],
+    install_requires=["scikit-learn", "scikit-image", "numpy", "flask", "flask-cors", "networkx", "umap-learn", "loguru", "requests", "llm"],
 )
