@@ -14,7 +14,7 @@ def get_static_files(path, prefix='src/categorical_gpt/'):
 
 setuptools.setup(
     name="categorical-gpt",
-    version="0.1.9",
+    version="0.1.10",
     author="Karim Huesmann",
     author_email="karimhuesmann@gmail.com",
     description="Transformation of categorical data to numerical feature vectors with Large Language Models",
