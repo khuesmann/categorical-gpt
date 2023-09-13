@@ -26,13 +26,12 @@ def error(message):
 def make_cgpt():
     category_name = request.json.get('category_name', '')
     category_options = request.json.get('category_options', '')
-    model_information = request.json.get('category_options', '')
 
     if category_name == '' or category_options == '':
         return error('Specify a category name and options.')
 
     if llm_driver is None:
-        return error('Model not mapped to a driver')
+        return error('LLM driver not set properly.')
 
     cgpt = CategoricalGPT(llm_driver, category_name, category_options)
 
