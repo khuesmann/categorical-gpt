@@ -54,7 +54,8 @@ def pairwise_distance(feature_tensor, distance='euclidean', normalization='minma
 
 
 def make_mds_embedding(cgpt, distance_metric='euclidean', n_dim=3, tolist=False):
-    distance_matrix = pairwise_distance([list(cgpt.feature_vectors.values())], distance=distance_metric)
+    f = list(cgpt.feature_vectors.values())
+    distance_matrix = pairwise_distance([f], distance=distance_metric)
     emb = mds(distance_matrix, dimensions=n_dim)
     if tolist:
         emb[0] = emb[0].tolist()

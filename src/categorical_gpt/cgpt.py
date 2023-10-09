@@ -12,7 +12,7 @@ DEFAULT_CHARACTERISTIC_PROMPT = "Given a dataset {dataset_name} with a categoric
 DEFAULT_HEURISTIC_PROMPT = "Given a dataset {dataset_name} with a categorical attribute '{category_name}'. " \
                            "A given category option can be described using the characteristics '{characteristic}'. " \
                            "Provide a guiding principle for assigning a numerical value, ranging between 0 and 100, to the specified options. " \
-                           "Start your response with 'To assign a numerical value ranging from 0 to 100 for the characteristic '{characteristic}', ...' " \
+                           "Start your response with 'To assign a numerical value ranging from 0 to 100 for the characteristic '{characteristic}', ...'. " \
                            "Be concise. Respond with an explanation for the heuristic only, no additional explanations. "
 
 DEFAULT_APPLY_HEURISTIC_PROMPT = "Given a dataset {dataset_name} with a categorical attribute '{category_name}' " \
@@ -61,6 +61,9 @@ class CategoricalGPT:
                     all_characteristics = all_characteristics + [t.capitalize() for t in characteristics]
                 else:
                     all_characteristics = all_characteristics + characteristics
+
+        if len(all_characteristics) == 0:
+            return self.get_characteristics(capitalized=capitalized, append=append, n=n, **kwargs)
 
         self.characteristic_certainties = {item: (all_characteristics.count(item) / n) for item in all_characteristics}
 
@@ -150,6 +153,8 @@ class CategoricalGPT:
                 if characteristic not in self.characteristic_values:
                     continue
                 v = self.characteristic_values[characteristic][option]
+                if isinstance(v, str):
+                    v = int(v)
                 if not isinstance(v, (int, float)) or v < 0:
                     logging.warning(f"Option '{option}' for characteristic '{characteristic}' failed to assign value.")
                     continue
